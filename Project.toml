@@ -1,6 +1,6 @@
 name = "SellmeierEqn"
 uuid = "357a7e8a-a3de-4779-b3ce-1506038be8d6"
-authors = ["stakahama <satoshi.takahama@gmail.com> and contributors"]
+authors = ["stakahama <satoshi.takahama@gmail.com>"]
 version = "1.0.0-DEV"
 
 [compat]
