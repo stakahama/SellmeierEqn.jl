@@ -1,6 +1,6 @@
 module SellmeierEqn
 
-export MATERIAL, SmParam, SmCoef, SmFn, Bounds, refidx
+export MATERIAL, SmParam, SmCoef, SmFn, SmTuple, Bounds, refidx
 
 """
 Coefficients for the Sellmeier equation.
@@ -43,11 +43,14 @@ struct Bounds
     upper::Real
 end
 
+
+const SmTuple = NamedTuple{<:Any, <:Tuple{Vararg{Union{SmCoef, SmFn}}}}
+
 """
-SmParam is a container for SmCoef, SmFn, or a NamedTuple containing the former two.
+SmParam is a container for SmCoef, SmFn, or a SmTuple (a NamedTuple containing the former two).
 """
 struct SmParam
-    params::Union{SmCoef, SmFn, NamedTuple{<:Any, <:Tuple{Vararg{Union{SmCoef, SmFn}}}}}
+    params::Union{SmCoef, SmFn, SmTuple}
     bounds::Bounds
 end
 
@@ -115,12 +118,12 @@ const MATERIAL = Dict(
 
     refidx(λ::Union{Real, AbstractVector{<:Real}}, material::Symbol)
     refidx(λ::Union{Real, AbstractVector{<:Real}}, param::SmParam)
-    refidx(λ::Union{Real, AbstractVector{<:Real}}, pt::NamedTuple{<:Any, <:Tuple{Vararg{Union{SmCoef, SmFn}}}}, b::Bounds)
+    refidx(λ::Union{Real, AbstractVector{<:Real}}, pt::SmTuple, b::Bounds)
     refidx(λ::AbstractVector{<:Real}, p::Union{SmCoef, SmFn}, b::Bounds)
     refidx(λ::Real, p::SmCoef, b::Bounds)
     refidx(λ::Real, f::SmFn, b::Bounds)
 
-Calculate refractive index from Sellmeier's equation using pre-defined entry in material library, or provide a custom entry (as a `SmParam` struct). Sellmeier's equation:
+Calculate refractive index from Sellmeier's equation using pre-defined entry in material library, or provide a custom entry (as a `SmParam` struct). Canonical Sellmeier's equation:
 
 n² = A + ∑ (B λ²) / (λ²+ C)
 
@@ -145,7 +148,7 @@ function refidx(λ::Union{Real, AbstractVector{<:Real}}, param::SmParam)
 end
 
 
-function refidx(λ::Union{Real, AbstractVector{<:Real}}, pt::NamedTuple{<:Any, <:Tuple{Vararg{Union{SmCoef, SmFn}}}}, b::Bounds)
+function refidx(λ::Union{Real, AbstractVector{<:Real}}, pt::SmTuple, b::Bounds)
     map(p -> refidx(λ, p, b), pt)
 end
 
