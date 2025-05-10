@@ -46,9 +46,9 @@ n = refidx(1e4 / 1000, :ZnSe)
 ```
 
 ``` julia
-ν = range(4000, 400, length = 100)
+ν = range(4000, 400, length=100)
 n = refidx(1e4 ./ ν, :ZnSe)
-plot(ν, n, xflip = true, legend = false)
+plot(ν, n, xflip=true, legend=false, size=(400, 250))
 ```
 
 ![](README_files/figure-commonmark/cell-5-output-1.svg)
@@ -101,4 +101,4 @@ MATERIAL[:LiB3O5]
 - [Sellmeier.jl](https://github.com/jagot/Sellmeier.jl): clever
   implementation but form of equation is more limited
 - [opticalmaterialspy](https://github.com/jtambasco/opticalmaterialspy):
-  …
+  includes many relevant materials but I have not evaluated it
