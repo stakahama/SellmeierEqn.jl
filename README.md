@@ -33,8 +33,9 @@ Materials implemented so far.
 keys(MATERIAL)
 ```
 
-    KeySet for a Dict{Symbol, SmParam} with 4 entries. Keys:
+    KeySet for a Dict{Symbol, Parameters} with 5 entries. Keys:
       :LiB3O5
+      :AgCl
       :SiO2
       :Ge
       :ZnSe
@@ -61,9 +62,9 @@ refidx(ν, MATERIAL[:ZnSe])
 ```
 
 Therefore, users can provide their own parameters in the form of
-`MATERIAL[:ZnSe]`. Additionally, a struct of type `SmFn` with a function
-and wavelength bounds can be provided if the equation does not conform
-to the conventional form (example further below).
+`MATERIAL[:ZnSe]`. Additionally, a struct of type `Equation` with a
+function and wavelength bounds can be provided if the equation does not
+conform to the conventional form (example further below).
 
 When there are ordinary / extraordinary rays or optic axes defined for
 the material, the function will return a tuple of vectors.
@@ -82,19 +83,19 @@ refidx([.5, .55, .6], :SiO2)
 MATERIAL[:ZnSe]
 ```
 
-    SmParam(SmCoef(1.0, [4.2980149, 0.62776557, 2.8955633], [0.036888195969000004, 0.14347625806276001, 2208.4919592140245]), Bounds(0.55, 18))
+    Parameters(Coefficients(1.0, [4.2980149, 0.62776557, 2.8955633], [0.036888195969000004, 0.14347625806276001, 2208.4919592140245]), Bounds(0.55, 18))
 
 ``` julia
 MATERIAL[:SiO2]
 ```
 
-    SmParam((nₒ = SmCoef(1.0, [0.663044, 0.517852, 0.175912, 0.56538, 1.675299], [0.0036, 0.011236, 0.014160999999999998, 78.21633599999998, 430.230564]), nₑ = SmCoef(1.0, [0.665721, 0.503511, 0.214792, 0.539173, 1.807613], [0.0036, 0.011236, 0.014160999999999998, 77.299264, 39088.848681])), Bounds(0.18, 0.72))
+    Parameters((nₒ = Coefficients(1.0, [0.663044, 0.517852, 0.175912, 0.56538, 1.675299], [0.0036, 0.011236, 0.014160999999999998, 78.21633599999998, 430.230564]), nₑ = Coefficients(1.0, [0.665721, 0.503511, 0.214792, 0.539173, 1.807613], [0.0036, 0.011236, 0.014160999999999998, 77.299264, 39088.848681])), Bounds(0.18, 0.72))
 
 ``` julia
 MATERIAL[:LiB3O5]
 ```
 
-    SmParam((nx = SmFn{SellmeierEqn.var"#1#4"}(SellmeierEqn.var"#1#4"()), ny = SmFn{SellmeierEqn.var"#2#5"}(SellmeierEqn.var"#2#5"()), nz = SmFn{SellmeierEqn.var"#3#6"}(SellmeierEqn.var"#3#6"())), Bounds(0.29, 1.06))
+    Parameters((nx = Equation{SellmeierEqn.var"#1#4"}(SellmeierEqn.var"#1#4"()), ny = Equation{SellmeierEqn.var"#2#5"}(SellmeierEqn.var"#2#5"()), nz = Equation{SellmeierEqn.var"#3#6"}(SellmeierEqn.var"#3#6"())), Bounds(0.29, 1.06))
 
 ## Related packages
 

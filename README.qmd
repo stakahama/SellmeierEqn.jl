@@ -50,7 +50,7 @@ The two below return the same value.
 refidx(ν, :ZnSe)
 refidx(ν, MATERIAL[:ZnSe])
 ```
-Therefore, users can provide their own parameters in the form of `MATERIAL[:ZnSe]`. Additionally, a struct of type `SmFn` with a function and wavelength bounds can be provided if the equation does not conform to the conventional form (example further below).
+Therefore, users can provide their own parameters in the form of `MATERIAL[:ZnSe]`. Additionally, a struct of type `Equation` with a function and wavelength bounds can be provided if the equation does not conform to the conventional form (example further below).
 
 When there are ordinary / extraordinary rays or optic axes defined for the material, the function will return a tuple of vectors.
 ```{julia}

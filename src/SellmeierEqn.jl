@@ -1,6 +1,6 @@
 module SellmeierEqn
 
-export MATERIAL, SmParam, SmCoef, SmFn, SmTuple, Bounds, refidx
+export MATERIAL, Parameters, Coefficients, Equation, ParametersTuple, Bounds, refidx
 
 """
 Coefficients for the Sellmeier equation.
@@ -13,19 +13,19 @@ Sometimes the coefficients are written with the notation `λ₀²` instead of `C
 - Weber, *Handbook of Optical Materials*, CRC Press, 2003. Chapter 1.3.4, "Dispersion Formulas for Refractive Index".
 
 """
-struct SmCoef
+struct Coefficients
     A::Float64
     B::Vector{Float64}
     C::Vector{Float64}
 
     # Inner constructor
-    function SmCoef(A::Float64, B::Vector{<:Real}, C::Vector{<:Real})
+    function Coefficients(A::Float64, B::Vector{<:Real}, C::Vector{<:Real})
         length(B) == length(C) || throw(DimensionMismatch("B and C must have equal lengths"))
         new(A, Float64.(B), Float64.(C))
     end    
 end
 
-SmCoef(B::Vector{Float64}, C::Vector{Float64}) = SmCoef(1.0, B::Vector{Float64}, C::Vector{Float64})
+Coefficients(B::Vector{Float64}, C::Vector{Float64}) = Coefficients(1.0, B::Vector{Float64}, C::Vector{Float64})
 
 """
 Sellmeier equation with coefficients (appropriate to use when the equations do not follow the canonical form). Sources:
@@ -34,7 +34,7 @@ Sellmeier equation with coefficients (appropriate to use when the equations do n
 - Weber, *Handbook of Optical Materials*, CRC Press, 2003. Chapter 1.3.4, "Dispersion Formulas for Refractive Index".
 
 """
-struct SmFn{F}
+struct Equation{F}
     f::F
 end
 
@@ -44,16 +44,26 @@ struct Bounds
 end
 
 
-const SmTuple = NamedTuple{<:Any, <:Tuple{Vararg{Union{SmCoef, SmFn}}}}
+const ParametersTuple = NamedTuple{<:Any, <:Tuple{Vararg{Union{Coefficients, Equation}}}}
 
 """
-SmParam is a container for SmCoef, SmFn, or a SmTuple (a NamedTuple containing the former two).
+Parameters is a container for Coefficients, Equation, or a ParametersTuple (a NamedTuple containing the former two).
 """
-struct SmParam
-    params::Union{SmCoef, SmFn, SmTuple}
+struct Parameters
+    params::Union{Coefficients, Equation, ParametersTuple}
     bounds::Bounds
 end
 
+"""
+    isin(λ::Real, b::Bounds)
+
+Test if λ is in the interval b.
+
+To use in vectorized form:
+```
+isin.(λ, Ref(b))
+```
+"""
 function isin(λ::Real, b::Bounds)
     mod(searchsortedlast([b.lower, b.upper], λ), 2) == 0
 end
@@ -70,43 +80,50 @@ Sources:
 - Weber, *Handbook of Optical Materials*, CRC Press, 2003. Chapter 1.3.4, "Dispersion Formulas for Refractive Index".
 """
 const MATERIAL = Dict(
-    :ZnSe => SmParam(
-        SmCoef(
+    :ZnSe => Parameters(
+        Coefficients(
             [4.2980149, 0.62776557, 2.8955633],
             [0.1920630, 0.37878260, 46.994595].^2
         ),
         Bounds(0.55, 18)
     ),
-    :Ge => SmParam(
-        SmCoef(
+    :Ge => Parameters(
+        Coefficients(
             9.28156,
             [6.72880, 0.21307],
             [0.44105, 3870.1].^2
         ),
         Bounds(2, 12)
     ),
-    :SiO2 => SmParam(
+    :AgCl => Parameters(
+        Coefficients(
+            [2.062508, 0.9461465, 4.300785],
+            [0.1039054, 0.2438691, 70.85723].^2
+        ),
+        Bounds(0.54, 21.0)
+    ),
+    :SiO2 => Parameters(
         (
-            nₒ = SmCoef(
+            nₒ = Coefficients(
                 [0.663044, 0.517852, 0.175912, 0.565380, 1.675299],
                 [0.060, 0.106, 0.119, 8.844, 20.742].^2
             ),
-            nₑ = SmCoef(
+            nₑ = Coefficients(
                 [0.665721, 0.503511, 0.214792, 0.539173, 1.807613],
                 [0.060, 0.106, 0.119, 8.792, 197.709].^2
             )
         ),
         Bounds(0.18, 0.72)
     ),
-    :LiB3O5 => SmParam(
+    :LiB3O5 => Parameters(
         (
-            nx = SmFn(
+            nx = Equation(
                 λ -> 2.45768 + 0.0098877 * λ^2 / (λ^2 - 0.026095^2) - 0.013847 * λ^2,
             ),
-            ny = SmFn(
+            ny = Equation(
                 λ -> 2.52500 + 0.017123 * λ^2 / (λ^2 - 0.0060517^2) - 0.0087838 * λ^2,
             ),
-            nz = SmFn(
+            nz = Equation(
                 λ -> 2.58488 + 0.012737 * λ^2 / (λ^2 - 0.016293^2) - 0.016293 * λ^2,
             )
         ),
@@ -117,13 +134,13 @@ const MATERIAL = Dict(
 """
 
     refidx(λ::Union{Real, AbstractVector{<:Real}}, material::Symbol)
-    refidx(λ::Union{Real, AbstractVector{<:Real}}, param::SmParam)
-    refidx(λ::Union{Real, AbstractVector{<:Real}}, pt::SmTuple, b::Bounds)
-    refidx(λ::AbstractVector{<:Real}, p::Union{SmCoef, SmFn}, b::Bounds)
-    refidx(λ::Real, p::SmCoef, b::Bounds)
-    refidx(λ::Real, f::SmFn, b::Bounds)
+    refidx(λ::Union{Real, AbstractVector{<:Real}}, param::Parameters)
+    refidx(λ::Union{Real, AbstractVector{<:Real}}, pt::ParametersTuple, b::Bounds)
+    refidx(λ::AbstractVector{<:Real}, p::Union{Coefficients, Equation}, b::Bounds)
+    refidx(λ::Real, p::Coefficients, b::Bounds)
+    refidx(λ::Real, f::Equation, b::Bounds)
 
-Calculate refractive index from Sellmeier's equation using pre-defined entry in material library, or provide a custom entry (as a `SmParam` struct). Canonical Sellmeier's equation:
+Calculate refractive index from Sellmeier's equation using pre-defined entry in material library, or provide a custom entry (as a `Parameters` struct). Canonical Sellmeier's equation:
 
 n² = A + ∑ (B λ²) / (λ²+ C)
 
@@ -143,27 +160,27 @@ function refidx(λ::Union{Real, AbstractVector{<:Real}}, material::Symbol)
     refidx(λ, param)
 end
 
-function refidx(λ::Union{Real, AbstractVector{<:Real}}, param::SmParam)
+function refidx(λ::Union{Real, AbstractVector{<:Real}}, param::Parameters)
     refidx(λ, param.params, param.bounds)    
 end
 
 
-function refidx(λ::Union{Real, AbstractVector{<:Real}}, pt::SmTuple, b::Bounds)
+function refidx(λ::Union{Real, AbstractVector{<:Real}}, pt::ParametersTuple, b::Bounds)
     map(p -> refidx(λ, p, b), pt)
 end
 
-function refidx(λ::AbstractVector{<:Real}, p::Union{SmCoef, SmFn}, b::Bounds)
+function refidx(λ::AbstractVector{<:Real}, p::Union{Coefficients, Equation}, b::Bounds)
     refidx.(λ, Ref(p), Ref(b))
 end
 
-function refidx(λ::Real, p::SmCoef, b::Bounds)
+function refidx(λ::Real, p::Coefficients, b::Bounds)
     if isin(λ, b) return missing end    
     (; A, B, C) = p
     n² = A + mapreduce((B, C) -> B * λ^2 / (λ^2 - C), +, B, C)
     √n²
 end
 
-function refidx(λ::Real, f::SmFn, b::Bounds)
+function refidx(λ::Real, f::Equation, b::Bounds)
     if isin(λ, b) return missing end
     n² = f(λ)
     √n²
